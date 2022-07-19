@@ -1,29 +1,29 @@
 package ru.wertor.spring.boot_security.demo.service;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.wertor.spring.boot_security.demo.model.User;
-import ru.wertor.spring.boot_security.demo.repository.RoleRepository;
+import ru.wertor.spring.boot_security.demo.repository.UserDao;
 import ru.wertor.spring.boot_security.demo.repository.UserRepository;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import java.util.List;
 
 @Service
 public class UserServiceImp implements UserService {
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     private final UserRepository userRepository;
+    private final UserDao userDao;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public UserServiceImp(UserRepository userRepository) {
+    public UserServiceImp(UserRepository userRepository, UserDao userDao, @Lazy BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
+        this.userDao = userDao;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     @Transactional
@@ -42,6 +42,18 @@ public class UserServiceImp implements UserService {
     @Override
     public User saveUser(User user) {
         user.setRole(user.getRole());
+        System.out.println("user.getPassword() = " + user.getPassword());
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    @Override
+    public User updateUser(User user) {
+        user.setRole(user.getRole());
+        if (!user.getPassword().equals(userDao.getPasswordById(user.getId()))) {
+            user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        }
         return userRepository.save(user);
     }
 
@@ -53,16 +65,8 @@ public class UserServiceImp implements UserService {
 
     @Transactional
     @Override
-    public User findByLogin(String login) {
-        TypedQuery<User> query = entityManager.createQuery("select u from User u WHERE u.login = :login", User.class)
-                .setParameter("login", login);
-        return query.getSingleResult();
-    }
-
-    @Transactional
-    @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        User user = userRepository.findByLogin(login);
+        User user = userDao.findByLogin(login);
         if (user == null) {
             throw new UsernameNotFoundException("Пользователь не найден");
         }

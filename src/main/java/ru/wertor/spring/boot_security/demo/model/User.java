@@ -24,7 +24,7 @@ public class User implements UserDetails {
     private String login;
     @Column(name = "password")
     private String password;
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     private Set<Role> role;
 
     public Long getId() {
@@ -134,5 +134,18 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return getAge() == user.getAge() && getId().equals(user.getId()) && getName().equals(user.getName()) && getFatherName().equals(user.getFatherName()) && getLastName().equals(user.getLastName()) && getLogin().equals(user.getLogin()) && getPassword().equals(user.getPassword()) && getRole().equals(user.getRole());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getName(), getFatherName(), getLastName(), getAge(), getLogin(), getPassword(), getRole());
     }
 }

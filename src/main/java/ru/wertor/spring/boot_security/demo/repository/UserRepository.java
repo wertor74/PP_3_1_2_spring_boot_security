@@ -5,5 +5,4 @@ import ru.wertor.spring.boot_security.demo.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    User findByLogin(String login);
 }
