@@ -1,5 +1,6 @@
 package ru.wertor.spring.boot_security.demo.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,8 @@ public class AdminController {
     }
 
     @GetMapping(value = "/users")
-    public String showUsers(Model model) {
+    public String showUsers(Model model, @AuthenticationPrincipal User user) {
+        model.addAttribute("user", user);
         model.addAttribute("user", userService.findAll());
         return "admin/users";
     }
